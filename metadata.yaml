@@ -1,0 +1,5 @@
+name: astrbot_plugin_shared_life_context
+desc: Shared life context provider for AstrBot persona behaviors.
+version: 0.5.1
+author: Codex
+repo: https://github.com/907nicerice/astrbot_plugin_shared_life_context
