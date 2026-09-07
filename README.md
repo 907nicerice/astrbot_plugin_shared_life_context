@@ -1,5 +1,7 @@
 # astrbot_plugin_shared_life_context
 
+测试账号名单读取自 `aling_memory.test_account_ids`。测试账号可以读取阿绫的生活舞台，但修改、重置和手动刷新命令会被拒绝，避免影响正式状态。
+
 共享生活状态上下文核心插件，为主动对话、QQ 空间动态、表情选择和未来人格行为提供统一的 `shared_life_context`。
 
 当前版本 `0.5.0` 将刷新逻辑拆成两层：
@@ -12,6 +14,7 @@
 ## Fix
 
 - `0.5.1` 修复 AstrBot object schema 缺失 `items` 导致插件安装失败。
+- `0.5.2` 增加测试账号只读保护；测试账号不能修改、重置或手动刷新正式生活状态。
 
 ## 安装
 

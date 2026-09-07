@@ -71,7 +71,7 @@ except ImportError:  # pragma: no cover - local fallback for syntax tests outsid
 
 
 PLUGIN_NAME = "astrbot_plugin_shared_life_context"
-PLUGIN_VERSION = "0.5.1"
+PLUGIN_VERSION = "0.5.2"
 DATA_FILENAME = "shared_life_context.json"
 MEMORY_FILENAME = "shared_life_memory.json"
 CONFIG_FILENAME = "config.json"
@@ -84,6 +84,39 @@ CURRENT_PERIOD_ALIASES = {
     "傍晚": "晚上",
     "中午": "下午",
 }
+
+
+def _test_account_ids() -> set[str]:
+    try:
+        path = Path(get_astrbot_data_path()) / "plugin_data" / "astrbot_plugin_aling_memory" / "config.json"
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, RuntimeError, ValueError, TypeError, json.JSONDecodeError):
+        return set()
+    raw = payload.get("test_account_ids", "") if isinstance(payload, dict) else ""
+    if isinstance(raw, str):
+        values = raw.replace("，", ",").replace("\n", ",").split(",")
+    elif isinstance(raw, (list, tuple, set)):
+        values = raw
+    else:
+        values = [raw]
+    return {str(value).strip() for value in values if str(value).strip()}
+
+
+def _event_sender_id(event: Any) -> str:
+    getter = getattr(event, "get_sender_id", None)
+    if callable(getter):
+        try:
+            value = getter()
+            if value:
+                return str(value).strip()
+        except Exception:
+            pass
+    return str(getattr(event, "user_id", "") or getattr(event, "sender_id", "") or "").strip()
+
+
+def _is_test_account(event: Any) -> bool:
+    sender_id = _event_sender_id(event)
+    return bool(sender_id and sender_id in _test_account_ids())
 DAILY_PLAN_KEYS = ("morning", "afternoon", "evening", "night")
 DAILY_PLAN_LABELS = {
     "morning": "上午",
@@ -1571,6 +1604,10 @@ class SharedLifeContextPlugin(Star):
         head, _, tail = command_text.partition(" ")
         action = head.strip().lower()
         rest = tail.strip()
+
+        read_only_actions = {"show", "json", "prompt", "qzone_prompt", "plan", "chat_context", "memory", "auto_status", "period_status", "help", "h", "?"}
+        if _is_test_account(event) and action not in read_only_actions:
+            return "测试账号处于只读沙盒，不能修改阿绫的正式生活状态。"
 
         if action == "show":
             return self._render_summary(self.service.load())
